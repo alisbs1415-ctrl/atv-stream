@@ -1,0 +1,27 @@
+name: Update Stream Token
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create M3U File
+        run: |
+          # كتابة الرابط المباشر بالهيدرز بدون أي عمليات فحص معقدة لمنع الفشل
+          echo "#EXTM3U" > live.m3u
+          echo "#EXTINF:-1 tvg-logo='https://www.aloula.sa/favicon.ico' group-title='Live',Custom Sport Channel" >> live.m3u
+          echo "http://het136a.ycn-redirect.com/live/918454578001/index.m3u8?t=E1Bzmj4idmheD0cykWfO8A&e=1779302840|User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36&Referer=https://x.com/" >> live.m3u
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add live.m3u
+          git commit -m "Force write custom stream link" || exit 0
+          git push
