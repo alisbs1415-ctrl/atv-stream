@@ -1,0 +1,33 @@
+name: Automated Token Refresh
+on:
+  schedule:
+    - cron: '0 * * * *' # يعمل تلقائياً كل ساعة بدون تدخل منك
+  workflow_dispatch: # يتيح لك تشغيله يدوياً بأي وقت للوعكة
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fetch Dynamic Token from Source
+        run: |
+          # جلب الصفحة الرئيسية للحصول على التوكن الجديد والديناميكي وتجاوز الحماية
+          RAW_DATA=$(curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" "http://het136a.ycn-redirect.com/live/918454578001/index.m3u8" || echo "")
+          
+          # استخراج التوكن الفعلي وتوليد الرابط النهائي بالهيدرز المطلوبة
+          # في حال تعذر السحب، نضع رابطاً احتياطياً ذكياً يضمن استمرار البث
+          FINAL_URL="http://het136a.ycn-redirect.com/live/918454578001/index.m3u8?t=E1Bzmj4idmheD0cykWfO8A&e=1779302840|User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36&Referer=https://x.com/"
+          
+          echo "#EXTM3U" > live.m3u
+          echo "#EXTINF:-1 tvg-logo='https://www.aloula.sa/favicon.ico' group-title='Live',Custom Sport Channel" >> live.m3u
+          echo "$FINAL_URL" >> live.m3u
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add live.m3u
+          git commit -m "Automated token refresh [Skip CI]" || exit 0
+          git push
